@@ -1,6 +1,6 @@
 import * as ClashofClansAPI from '../../src/services/clashofclansAPI.js';
 import * as Database from '../../src/services/database.js';
-import { writeConsoleANDLog } from '../write.js';
+import { writeConsoleANDLog } from '../../utils/write.js';
 const WAR_ENDED = 'warEnded';
 
 async function getWarEnded(db, clan) {

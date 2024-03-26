@@ -1,7 +1,7 @@
 import * as ClashofClansAPI from '../../src/services/clashofclansAPI.js';
 import * as Database from '../../src/services/database.js';
-import { writeConsoleANDLog } from '../write.js';
-import { DatabaseError, SQLITE_CONSTRAINT_FOREIGNKEY, SQLITE_CONSTRAINT_UNIQUE } from '../errorCreate.js';
+import { writeConsoleANDLog } from '../../utils/write.js';
+import { DatabaseError, SQLITE_CONSTRAINT_FOREIGNKEY, SQLITE_CONSTRAINT_UNIQUE } from '../../utils/errorCreate.js';
 
 async function getPlayersClanData(clan) {
   try {
@@ -137,7 +137,7 @@ export async function databaseUpdate() {
         await Database.runCommand(db, `UPDATE ClanData SET lastUpdate = '${date}' WHERE tag = '${connection.clan}'`);
       }
       await Database.closeConnection(db);
-    }, 2 * 60_000);
+    }, 1 * 20_000);
   } catch (error) {
     await writeConsoleANDLog(error);
   }

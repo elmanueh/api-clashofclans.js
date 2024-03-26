@@ -2,8 +2,8 @@ import sqlite3 from 'sqlite3';
 import fs from 'fs';
 import { DatabaseError } from '../../utils/errorCreate.js';
 
-const DATABASE_FILE = './mybotdata.sqlite';
-const SCRIPT_INIT_FILE = './src/services/script.sql';
+const DATABASE_FILE = './src/database/mybotdata.sqlite';
+const SCRIPT_INIT_FILE = './src/database/script.sql';
 
 // Create new connection with the database
 export async function openConnection() {
@@ -68,6 +68,7 @@ export async function initialize() {
     }
     await runCommand(db, 'COMMIT');
   } catch (error) {
+    console.log(error);
     await runCommand(db, 'ROLLBACK');
     throw new DatabaseError(error);
   } finally {
