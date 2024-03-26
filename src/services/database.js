@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
 import fs from 'fs';
-import { DatabaseError } from '../utils/errorCreate.js';
+import { DatabaseError } from '../../utils/errorCreate.js';
 
 const DATABASE_FILE = './mybotdata.sqlite';
 const SCRIPT_INIT_FILE = './src/services/script.sql';

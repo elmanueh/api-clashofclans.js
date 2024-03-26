@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import * as Controller from './controller.js';
+import * as Controller from '../src/controllers/controller.js/index.js';
 
 const port = 80;
 const app = express();
