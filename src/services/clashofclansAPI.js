@@ -1,5 +1,5 @@
 import * as AxiosAdapter from './axios-adapter.js';
-import { ClashOfClansError, HTTP_404_NOT_FOUND } from '../../utils/errorCreate.js';
+import { ClashOfClansError, HTTP_404_NOT_FOUND } from '../utils/errorCreate.js';
 
 // Starting module
 const LINK_API = 'https://api.clashofclans.com/v1';
