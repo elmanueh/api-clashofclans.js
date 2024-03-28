@@ -1,5 +1,4 @@
 /node_modules
-.env
-database/mybotdata.sqlite
-latest.log
 src/database/mybotdata.sqlite
+.env
+latest.log
