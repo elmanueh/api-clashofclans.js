@@ -1,5 +1,5 @@
-import * as ClashofClansAPI from '../../src/services/clashofclansAPI.js';
-import * as Database from '../../src/services/database.js';
+import * as ClashofClansAPI from '../services/clashofclans.js';
+import * as Database from '../services/database.js';
 import { writeConsoleANDLog } from '../../utils/write.js';
 const WAR_ENDED = 'warEnded';
 

@@ -1,15 +1,18 @@
 import express from 'express';
 import cors from 'cors';
+import playerRoutes from './routes/player-routes.js';
+import clanRoutes from './routes/clan-routes.js';
 
-const port = 80;
+const SERVER_PORT = 80;
 const app = express();
 app.use(cors());
+app.use(express.json());
 
-app.get('/v1/clan', async (req, res) => {
-  res.send('tu puta madre');
-});
+// Routes
+app.use('/players', playerRoutes);
+app.use('/clans', clanRoutes);
 
 // Starting app
-app.listen(port, () => {
-  console.log(`Server listening in port ${port}`);
+app.listen(SERVER_PORT, () => {
+  console.log(`Server listening in port ${SERVER_PORT}`);
 });

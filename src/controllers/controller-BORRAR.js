@@ -1,4 +1,4 @@
-import * as ClashofClansAPI from '../services/clashofclansAPI.js';
+import * as ClashofClansAPI from '../services/clashofclans.js';
 import * as Database from '../services/database.js';
 import * as ControllerStatus from './controller-status.js';
 import * as ErrorCreate from '../utils/errorCreate.js';

@@ -1,5 +1,5 @@
 import { appendFile } from 'fs/promises';
-import { ClashOfClansError, DatabaseError } from './errorCreate.js';
+import { ClashOfClansError, DatabaseError } from './error-handler.js';
 const LOG_FILENAME = 'latest.log';
 
 async function serializeMessage(message) {
