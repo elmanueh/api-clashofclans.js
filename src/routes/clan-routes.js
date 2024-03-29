@@ -11,15 +11,15 @@ router.get('/clan/:tag', async (req, res) => {
 });
 
 // Route for track a clan (Clan + DiscordGuild)
-router.get('/track', async (req, res) => {
-  const { clanTag, guildId } = req.body;
+router.post('/track', async (req, res) => {
+  const { tag: clanTag, guildId: guildId } = req.body;
   const response = await ClanController.track(clanTag, guildId);
   res.status(response.statusCode).json(response.content);
 });
 
 // Route for untrack a clan (Clan + DiscordGuild)
-router.get('/untrack', async (req, res) => {
-  const { clanTag, guildId } = req.body;
+router.post('/untrack', async (req, res) => {
+  const { tag: clanTag, guildId: guildId } = req.body;
   const response = await ClanController.untrack(clanTag, guildId);
   res.status(response.statusCode).json(response.content);
 });
