@@ -1,20 +1,27 @@
 import * as PlayerController from '../controllers/player-controller.js';
+
 import express from 'express';
 const router = express.Router();
 
+// Route for link an account (Player + DiscordUser)
 router.post('/linkaccount', async (req, res) => {
-  const { tag, token, discordId } = req.body;
-  const response = await PlayerController.linkAccount(tag, token, discordId);
-  res.status(200).send(`${response}`);
+  const { tag: playerTag, token: playerToken, discordId: userId } = req.body;
+  const response = await PlayerController.linkAccount(playerTag, playerToken, userId);
+  res.status(response.statusCode).json(response.content);
 });
-// Definir las rutas para comentarios
-/*router.get('/:tag', async (req, res) => {
-  const playerTag = req.params.tag;
-  console.log(playerTag);
-  console.log(2);
-  const a = await PlayerController.getPlayer(playerTag);
-  res.send(a);
-});*/
 
-// Exportar el enrutador
+// Route for get player info (Player)
+router.get('/player/:tag', async (req, res) => {
+  const playerTag = req.params.tag;
+  const response = await PlayerController.getPlayer(playerTag);
+  res.status(response.statusCode).json(response.content);
+});
+
+// Route for unlink an account (Player + DiscordUser)
+router.post('/unlinkaccount', async (req, res) => {
+  const { tag: playerTag, discordId: userId } = req.body;
+  const response = await PlayerController.unlinkAccount(playerTag, userId);
+  res.status(response.statusCode).json(response.content);
+});
+
 export default router;
