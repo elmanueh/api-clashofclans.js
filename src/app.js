@@ -3,7 +3,7 @@ import cors from 'cors';
 import playerRoutes from './routes/player-routes.js';
 import clanRoutes from './routes/clan-routes.js';
 
-const SERVER_PORT = 80;
+const SERVER_PORT = 4321;
 const app = express();
 app.use(cors());
 app.use(express.json());
