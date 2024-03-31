@@ -19,7 +19,8 @@ export async function getClan(clanTag) {
                               SELECT ${tableParameters}
                               FROM PlayerClanData
                               INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag
-                                WHERE role != 'not_member'`;
+                                WHERE role != 'not_member'
+                                AND clan = '${clan.tag}'`;
 
     await Database.runCommand(db, 'BEGIN');
     await Database.runCommand(db, createTempView);
