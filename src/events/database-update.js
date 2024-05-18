@@ -123,10 +123,8 @@ export async function databaseUpdate() {
   try {
     setInterval(async () => {
       const db = await Database.openConnection();
-      console.log('actualizado');
       let connections = await Database.getMultipleRow(db, `SELECT * FROM GuildConnections`);
       for (const connection of connections) {
-        console.log(connection.clan);
         let playersDatabase = await Database.getMultipleRow(db, `SELECT * FROM PlayerClanData WHERE clan = '${connection.clan}'`);
         let playersClan = await getPlayersClanData(connection.clan);
 
