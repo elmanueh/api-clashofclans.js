@@ -13,6 +13,7 @@ export async function getClan(clanTag) {
   if (!clanTag) return await CreateResponse.create(`TableName: ${tableName}\nParameters: ${tableParameters}`, CreateResponse.HTTP_200_OK);
   const db = await Database.openConnection();
   try {
+    await Database.runCommand(db, 'BEGIN');
     const clan = await ClashofClansApi.getClan(clanTag);
     if (!clan) return await CreateResponse.create(ControllerStatus.TAG_INCORRECT, CreateResponse.HTTP_404_NOT_FOUND);
     const createTempView = `CREATE TEMPORARY VIEW ${tableName} AS
@@ -22,7 +23,6 @@ export async function getClan(clanTag) {
                                 WHERE role != 'not_member'
                                 AND clan = '${clan.tag}'`;
 
-    await Database.runCommand(db, 'BEGIN');
     await Database.runCommand(db, createTempView);
     const replyDatabase = await Database.getMultipleRow(db, `SELECT * FROM ${tableName}`);
     await Database.runCommand(db, 'COMMIT');
