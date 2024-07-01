@@ -1,77 +1,50 @@
-import sqlite3 from 'sqlite3';
-import fs from 'fs';
-import { DatabaseError } from '../../utils/error-handler.js';
+import mysql from 'mysql2/promise';
+import { config } from 'dotenv';
+config();
 
-const DATABASE_FILE = './src/database/mybotdata.sqlite';
-const SCRIPT_INIT_FILE = './src/database/script.sql';
+// Database connection configuration
+const pool = mysql.createPool({
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  connectionLimit: process.env.DB_CONNECTION_LIMIT,
+  waitForConnections: process.env.DB_WAIT_FOR_CONNECTION,
+  queueLimit: process.env.DB_QUEUE_LIMIT
+});
 
-// Create new connection with the database
-export async function openConnection() {
-  return new Promise(async (resolve, reject) => {
-    const connection = new sqlite3.Database(DATABASE_FILE, (err) => {
-      if (!err) return resolve(connection);
-      return reject(new DatabaseError(err));
-    });
-    await runCommand(connection, 'PRAGMA foreign_keys = 1');
-  });
+// Get a connection from the pool
+async function getConnection() {
+  const connection = await pool.getConnection();
+  return connection;
 }
 
-// Close existing connection with the database
-export async function closeConnection(connection) {
-  return new Promise((resolve, reject) => {
-    connection.close((err) => {
-      if (!err) return resolve();
-      return reject(new DatabaseError(err));
-    });
-  });
+// Function to close the connection
+async function releaseConnection(connection) {
+  await connection.release();
 }
 
-// Get one row in the database
-export async function getSingleRow(connection, request) {
-  return new Promise((resolve, reject) => {
-    connection.get(request, (err, row) => {
-      if (!err) return resolve(row);
-      return reject(new DatabaseError(err));
-    });
-  });
+// Execute a SELECT or UPDATE or DELETE query
+export async function executeQuery(connection, sql) {
+  const [results, fields] = await connection.query(sql);
+  return results;
 }
 
-// Get all the rows in the database
-export async function getMultipleRow(connection, request) {
-  return new Promise((resolve, reject) => {
-    connection.all(request, (err, rows) => {
-      if (!err) return resolve(rows);
-      return reject(new DatabaseError(err));
-    });
-  });
+// Begin a transaction
+export async function beginTransaction() {
+  const connection = await getConnection();
+  await connection.beginTransaction();
+  return connection;
 }
 
-// Execute a command in the database
-export async function runCommand(connection, request) {
-  return new Promise((resolve, reject) => {
-    connection.run(request, function (err) {
-      if (!err) return resolve(true);
-      return reject(new DatabaseError(err));
-    });
-  });
+// Commit a transaction
+export async function commitTransaction(connection) {
+  await connection.commit();
+  await releaseConnection(connection);
 }
 
-// Create the database for the system
-export async function initialize() {
-  const db = await openConnection();
-  try {
-    let sqlScripts = fs.readFileSync(SCRIPT_INIT_FILE, 'utf8');
-    sqlScripts = sqlScripts.split(';').map((sql) => sql.trim());
-    await runCommand(db, 'BEGIN EXCLUSIVE');
-    for (const sqlScript of sqlScripts) {
-      if (sqlScript) await runCommand(db, sqlScript);
-    }
-    await runCommand(db, 'COMMIT');
-  } catch (error) {
-    console.log(error);
-    await runCommand(db, 'ROLLBACK');
-    throw new DatabaseError(error);
-  } finally {
-    await closeConnection(db);
-  }
+// Rollback a transaction
+export async function rollbackTransaction(connection) {
+  await connection.rollback();
+  await releaseConnection(connection);
 }

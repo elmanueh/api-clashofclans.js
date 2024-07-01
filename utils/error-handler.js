@@ -47,6 +47,9 @@ export const SQLITE_CONSTRAINT_FOREIGNKEY = 'SQLITE_CONSTRAINT_FOREIGNKEY';
 export const SQLITE_CONSTRAINT_UNIQUE = 'SQLITE_CONSTRAINT_UNIQUE';
 export const SQLITE_ERROR = 'SQLITE_ERROR';
 
+export const MYSQL_CONSTRAINT_FOREIGNKEY = 1452;
+export const MYSQL_CONSTRAINT_UNIQUE = 1062;
+
 export class DatabaseError extends Error {
   constructor(error) {
     super(error && error.message ? error.message : 'Unknown database error');

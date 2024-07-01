@@ -1,17 +1,25 @@
+import express from 'express';
+import cors from 'cors';
+import playerRoutes from './src/routes/player-routes.js';
+import clanRoutes from './src/routes/clan-routes.js';
 import { databaseUpdate } from './src/events/database-update.js';
 import { currentWar } from './src/events/currentwar-update.js';
-import * as Database from './src/services/database.js';
-import {} from './src/app.js';
+import { config } from 'dotenv';
+config();
 
-try {
-  // Initialize the database if it is not created
-  await Database.initialize();
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-  // Starting event update database
-  databaseUpdate();
+// Routes
+app.use('/players', playerRoutes);
+app.use('/clans', clanRoutes);
 
-  // Starting event track current war
-  currentWar();
-} catch (error) {
-  console.log(error);
-}
+// Starting app
+app.listen(process.env.API_PORT, () => {
+  console.log(`Server listening in port ${process.env.API_PORT}`);
+});
+
+// Starting events
+databaseUpdate();
+currentWar();

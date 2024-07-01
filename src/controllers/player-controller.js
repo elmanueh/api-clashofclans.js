@@ -18,6 +18,7 @@ export async function getPlayer(playerTag) {
 
 // Link the COC account with Discord
 export async function linkAccount(playerTag, playerToken, userId) {
+  return await CreateResponse.create(ControllerStatus.ERROR, CreateResponse.HTTP_500_INTERNAL_SERVER_ERROR);
   const db = await Database.openConnection();
   try {
     const playerClan = await ClashofClansApi.getPlayer(playerTag);
@@ -48,6 +49,7 @@ export async function linkAccount(playerTag, playerToken, userId) {
 
 // Unlink the COC account with Discord
 export async function unlinkAccount(playerTag, userId) {
+  return await CreateResponse.create(ControllerStatus.ERROR, CreateResponse.HTTP_500_INTERNAL_SERVER_ERROR);
   const db = await Database.openConnection();
   try {
     const playerClan = await ClashofClansApi.getPlayer(playerTag);
