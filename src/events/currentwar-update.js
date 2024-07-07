@@ -1,79 +1,62 @@
 import * as ClashofClansAPI from '../services/clashofclans.js';
 import * as Database from '../services/database.js';
-import { writeConsoleANDLog } from '../../utils/write.js';
+
+import * as COCAPI from '../../utils/constants.js';
+const TIME_CURRENTWAR_UPDATE = 5 * 60_000;
 const WAR_ENDED = 'warEnded';
 
-async function getWarEnded(db, clan) {
-  try {
-    let currentWar = await ClashofClansAPI.getClanCurrentWar(clan);
-    if (currentWar.state !== WAR_ENDED) return;
+async function getWarEnded(conn, clanTag) {
+  const currentWar = await ClashofClansAPI.getClanCurrentWar(clanTag);
+  if (currentWar.state !== WAR_ENDED) return;
 
-    let clanData = await Database.executeQuery(db, `SELECT * FROM Clans WHERE tag = '${clan}'`);
-    return currentWar.opponent.tag !== clanData.LastWar ? currentWar : null;
-  } catch (error) {
-    await writeConsoleANDLog(error);
+  const clan = await Database.Select(conn, COCAPI.CLANS, `Tag = '${clanTag}'`);
+  return currentWar.opponent.tag !== clan.LastWar ? currentWar : null;
+}
+
+async function addNewAttack(conn, playerClan, lastAttack) {
+  const playerAttacks = playerClan.WarAttacks.split(' ');
+  for (let i = 0; i < 4; i++) lastAttack += ` ${playerAttacks[i]}`;
+  await Database.Update(conn, COCAPI.PLAYERSCLANS, `WarAttacks = '${lastAttack}'`, `Clan = '${playerClan.Clan}' AND Player = '${playerClan.Player}'`);
+}
+
+async function playersWarUpdate(conn, warEnded) {
+  const playersWar = warEnded.clan.members;
+  for (const playerWar of playersWar) {
+    let stars = 0;
+    if (playerWar.attacks) for (const attack of playerWar.attacks) stars += attack.stars;
+
+    const playerClan = (await Database.Select(conn, COCAPI.PLAYERSCLANS, `Clan = '${warEnded.clan.tag}' AND Player = '${playerWar.tag}'`))[0];
+    if (!playerClan) continue;
+    const lastAttack = playerWar.attacks ? `${playerWar.attacks.length}[${stars}]` : '0[0]';
+    await addNewAttack(conn, playerClan, lastAttack);
   }
 }
 
-async function addNewAttack(db, playerClan, lastAttack) {
-  try {
-    let playerAttacks = playerClan.WarAttacks.split(' ');
-    for (let i = 0; i < 4; i++) {
-      lastAttack += ` ${playerAttacks[i]}`;
-    }
-    await Database.executeQuery(db, `UPDATE PlayersClans SET warAttacks = '${lastAttack}' WHERE clan = '${playerClan.clan}' AND player = '${playerClan.player}'`);
-  } catch (error) {
-    await writeConsoleANDLog(error);
-  }
+async function otherPlayersUpdate(conn, warEnded) {
+  const playersWar = warEnded.clan.members;
+  const playersClan = await Database.Select(conn, COCAPI.PLAYERSCLANS, `Clan = '${warEnded.clan.tag}'`);
+  const playersClanOut = playersClan.filter((playerClan) => !playersWar.map((playerWar) => playerWar.tag).includes(playerClan.Player));
+  for (const playerClanOut of playersClanOut) await addNewAttack(conn, playerClanOut, '-');
 }
 
-async function warPlayersUpdate(db, warEnded) {
-  let warPlayers = warEnded.clan.members;
-  try {
-    for (const warPlayer of warPlayers) {
-      let stars = 0;
-      if (warPlayer.attacks) for (const attack of warPlayer.attacks) stars += attack.stars;
-
-      let playerClan = (await Database.executeQuery(db, `SELECT * FROM PlayersClans WHERE clan = '${warEnded.clan.tag}' AND player = '${warPlayer.tag}'`))[0];
-      if (!playerClan) continue;
-      let lastAttack = warPlayer.attacks ? `${warPlayer.attacks.length}[${stars}]` : '0[0]';
-      await addNewAttack(db, playerClan, lastAttack);
-    }
-  } catch (error) {
-    await writeConsoleANDLog(error);
-  }
-}
-
-async function otherPlayersUpdate(db, warEnded) {
-  try {
-    let warPlayers = warEnded.clan.members;
-    let playersClan = await Database.executeQuery(db, `SELECT * FROM PlayersClans WHERE clan = '${warEnded.clan.tag}'`);
-    let notWarPlayers = playersClan.filter((playerClan) => !warPlayers.map((player) => player.tag).includes(playerClan.player));
-    for (const notWarPlayer of notWarPlayers) {
-      await addNewAttack(db, notWarPlayer, '-');
-    }
-  } catch (error) {
-    await writeConsoleANDLog(error);
-  }
-}
-
-export async function currentWar() {
-  try {
-    setInterval(async () => {
-      const connection = await Database.beginTransaction();
-      let updateClans = await Database.executeQuery(connection, `SELECT * FROM UpdateClans`);
-      for (const clan of updateClans) {
-        let warEnded = await getWarEnded(connection, clan.Clan);
+export async function currentWarUpdate() {
+  setInterval(async () => {
+    let conn;
+    try {
+      conn = await Database.getConnection();
+      const clans = await Database.Select(conn, COCAPI.UPDATECLANS);
+      for (const clan of clans) {
+        const warEnded = await getWarEnded(conn, clan.Clan);
         if (!warEnded) continue;
 
-        await warPlayersUpdate(connection, warEnded);
-        await otherPlayersUpdate(connection, warEnded);
-
-        await Database.executeQuery(connection, `UPDATE Clans SET lastWar = '${warEnded.opponent.tag}' WHERE tag = '${clan.Clan}'`);
+        await playersWarUpdate(conn, warEnded);
+        await otherPlayersUpdate(conn, warEnded);
+        await Database.Update(conn, COCAPI.CLANS, `LastWar = '${warEnded.opponent.tag}'`, `Tag = '${clan.Clan}'`);
       }
-      await Database.commitTransaction(connection);
-    }, 1 * 20_000);
-  } catch (error) {
-    await writeConsoleANDLog(error);
-  }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      await Database.releaseConnection(conn);
+    }
+  }, TIME_CURRENTWAR_UPDATE);
 }

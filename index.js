@@ -3,7 +3,7 @@ import cors from 'cors';
 import playerRoutes from './src/routes/player-routes.js';
 import clanRoutes from './src/routes/clan-routes.js';
 import { databaseUpdate } from './src/events/database-update.js';
-import { currentWar } from './src/events/currentwar-update.js';
+import { currentWarUpdate } from './src/events/currentwar-update.js';
 import { config } from 'dotenv';
 config();
 
@@ -22,4 +22,4 @@ app.listen(process.env.API_PORT, () => {
 
 // Starting events
 databaseUpdate();
-currentWar();
+currentWarUpdate();
