@@ -14,37 +14,52 @@ const pool = mysql.createPool({
 });
 
 // Get a connection from the pool
-async function getConnection() {
+export async function getConnection() {
   const connection = await pool.getConnection();
   return connection;
 }
 
 // Function to close the connection
-async function releaseConnection(connection) {
-  await connection.release();
+export async function releaseConnection(connection) {
+  try {
+    await connection.release();
+  } catch (error) {
+    console.log(error);
+  }
 }
 
-// Execute a SELECT or UPDATE or DELETE query
+// Execute a query
 export async function executeQuery(connection, sql) {
   const [results, fields] = await connection.query(sql);
   return results;
 }
 
-// Begin a transaction
-export async function beginTransaction() {
-  const connection = await getConnection();
-  await connection.beginTransaction();
-  return connection;
+export async function Select(connection, table, condition = null) {
+  let [results, fields] = [];
+  if (!condition) {
+    [results, fields] = await connection.query(`SELECT * FROM ${table}`);
+  } else {
+    [results, fields] = await connection.query(`SELECT * FROM ${table} WHERE ${condition}`);
+  }
+  return results;
 }
 
-// Commit a transaction
-export async function commitTransaction(connection) {
-  await connection.commit();
-  await releaseConnection(connection);
+export async function Insert(connection, table, params, values) {
+  await connection.query(`INSERT INTO ${table} (${params}) VALUES (${values})`);
 }
 
-// Rollback a transaction
-export async function rollbackTransaction(connection) {
-  await connection.rollback();
-  await releaseConnection(connection);
+export async function Update(connection, table, set, condition = null) {
+  if (!condition) {
+    await connection.query(`UPDATE ${table} SET ${set}`);
+  } else {
+    await connection.query(`UPDATE ${table} SET ${set} WHERE ${condition}`);
+  }
+}
+
+export async function Delete(connection, table, condition = null) {
+  if (!condition) {
+    await connection.query(`DELETE FROM ${table}`);
+  } else {
+    await connection.query(`DELETE FROM ${table} WHERE ${condition}`);
+  }
 }
