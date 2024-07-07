@@ -3,33 +3,24 @@ import * as ErrorHandler from '../../utils/error-handler.js';
 import * as ClashofClansApi from '../services/clashofclans.js';
 import * as Database from '../services/database.js';
 import * as CreateResponse from '../../utils/create-response.js';
-import { writeConsoleANDLog } from '../../utils/write.js';
+import * as COCAPI from '../../utils/constants.js';
 
 // Get a clan info
 export async function getClan(clanTag) {
-  const tableName = 'vista';
-  const tableParameters = 'player, name, role, townHall, lootCapital, addCapital, clanGames, warPreference, warAttacks';
-
-  if (!clanTag) return await CreateResponse.create(`TableName: ${tableName}\nParameters: ${tableParameters}`, CreateResponse.HTTP_200_OK);
-  const connection = await Database.beginTransaction();
+  if (!clanTag) return await CreateResponse.create(ControllerStatus.ERROR, CreateResponse.HTTP_500_INTERNAL_SERVER_ERROR);
+  let conn;
   try {
-    const clan = await ClashofClansApi.getClan(clanTag);
-    if (!clan) return await CreateResponse.create(ControllerStatus.TAG_INCORRECT, CreateResponse.HTTP_404_NOT_FOUND);
-    const createTempView = `CREATE TEMPORARY VIEW ${tableName} AS
-                              SELECT ${tableParameters}
-                              FROM PlayersClans
-                              INNER JOIN Players ON PlayersClans.player = Players.tag
-                                WHERE role != 'not_member'
-                                AND clan = '${clan.tag}'`;
+    conn = await Database.getConnection();
+    const clanApi = await ClashofClansApi.getClan(clanTag);
+    if (!clanApi) return await CreateResponse.create(ControllerStatus.TAG_INCORRECT, CreateResponse.HTTP_404_NOT_FOUND);
 
-    await Database.executeQuery(connection, createTempView);
-    const replyDatabase = (await Database.executeQuery(connection, `SELECT * FROM ${tableName}`))[0];
-    await Database.commitTransaction(connection);
-    return await CreateResponse.create(replyDatabase, CreateResponse.HTTP_200_OK);
+    const playersClan = (await Database.Select(conn, COCAPI.PLAYERSINCLAN_VIEW))[0];
+    return await CreateResponse.create(playersClan, CreateResponse.HTTP_200_OK);
   } catch (error) {
-    await writeConsoleANDLog(error);
-    await Database.rollbackTransaction(connection);
+    console.log(error);
     return await CreateResponse.create(ControllerStatus.ERROR, CreateResponse.HTTP_500_INTERNAL_SERVER_ERROR);
+  } finally {
+    await Database.releaseConnection(conn);
   }
 }
 
