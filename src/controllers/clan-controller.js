@@ -14,7 +14,7 @@ export async function getClan(clanTag) {
     const clanApi = await ClashofClansApi.getClan(clanTag);
     if (!clanApi) return await CreateResponse.create(ControllerStatus.TAG_INCORRECT, CreateResponse.HTTP_404_NOT_FOUND);
 
-    const playersClan = (await Database.Select(conn, COCAPI.PLAYERSINCLAN_VIEW))[0];
+    const playersClan = await Database.Select(conn, COCAPI.PLAYERSINCLAN_VIEW);
     return await CreateResponse.create(playersClan, CreateResponse.HTTP_200_OK);
   } catch (error) {
     console.log(error);
