@@ -7,6 +7,7 @@ const WAR_ENDED = 'warEnded';
 
 async function getWarEnded(conn, clanTag) {
   const currentWar = await ClashofClansAPI.getClanCurrentWar(clanTag);
+  if (!currentWar) return;
   if (currentWar.state !== WAR_ENDED) return;
 
   const clan = await Database.Select(conn, COCAPI.CLANS, `Tag = '${clanTag}'`);

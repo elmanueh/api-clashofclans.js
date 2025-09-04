@@ -1,5 +1,5 @@
 import * as AxiosAdapter from './axios.js';
-import { ClashOfClansError, HTTP_404_NOT_FOUND } from '../../utils/error-handler.js';
+import { ClashOfClansError, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND } from '../../utils/error-handler.js';
 
 // Starting module
 const LINK_API = 'https://api.clashofclans.com/v1';
@@ -76,6 +76,7 @@ export async function getClanCurrentWar(clan) {
     const currentWar = await AxiosAdapter.requestApiGet(uri);
     return currentWar;
   } catch (error) {
-    throw new ClashOfClansError(error);
+    const status = error.response ? error.response.status : null;
+    if (status !== HTTP_403_FORBIDDEN) throw new ClashOfClansError(error);
   }
 }
